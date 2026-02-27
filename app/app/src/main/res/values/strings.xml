@@ -1,0 +1,53 @@
+<resources>
+    <string name="app_name">GpsTracker</string>
+    <string name="title_settings">Impostazioni</string>
+
+    <!-- Settings fields -->
+    <string name="hint_device_name">Nome device</string>
+    <string name="hint_api_url">URL API (https://…)</string>
+    <string name="hint_username">Username</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_tracking_interval">Intervallo tracking (secondi)</string>
+
+    <!-- Buttons -->
+    <string name="btn_test_api">Test chiamata API</string>
+    <string name="btn_settings">Impostazioni</string>
+    <string name="btn_save">Salva</string>
+    <string name="btn_go_to_settings">Apri impostazioni</string>
+
+    <!-- Permission rationale -->
+    <string name="rationale_location">GpsTracker ha bisogno dell\'accesso alla posizione per rilevare e inviare le coordinate GPS.</string>
+    <string name="rationale_background_location">Per il tracking in background, GpsTracker necessita dell\'accesso alla posizione anche quando l\'app è chiusa. Concedi "Sempre" nelle impostazioni.</string>
+    <string name="rationale_notification">Le notifiche sono necessarie per mantenere il servizio di tracking attivo in background.</string>
+
+    <!-- Permission denied messages -->
+    <string name="error_location_denied">Permesso posizione negato. Il tracking non è possibile.</string>
+    <string name="error_permission_permanent">Permesso negato permanentemente. Abilitalo manualmente nelle impostazioni dell\'app.</string>
+
+    <!-- Status messages -->
+    <string name="status_acquiring">Invio dati</string>
+    <string name="status_sending">Invio dati</string>
+    <string name="status_success">Dati inviati</string>
+    <string name="status_error">Errore: %1$s</string>
+    <string name="status_idle">Pronto</string>
+
+    <!-- Tracking service notification -->
+    <string name="notification_channel_name">GpsTracker Tracking</string>
+    <string name="notification_tracking_title">Tracking attivo</string>
+    <string name="notification_tracking_text">GpsTracker sta monitorando la posizione in background.</string>
+
+    <!-- Battery optimization -->
+    <string name="battery_opt_title">Ottimizzazione batteria</string>
+    <string name="battery_opt_message">Per garantire il tracking affidabile in background, si consiglia di escludere GpsTracker dall\'ottimizzazione batteria.</string>
+    <string name="battery_opt_positive">Escludi</string>
+    <string name="battery_opt_negative">Non ora</string>
+
+    <!-- Widget -->
+    <string name="widget_label">GpsTracker</string>
+    <string name="widget_send">Invia GPS</string>
+    <string name="label_widget_bg_color">Colore sfondo widget</string>
+    <string name="color_blue">Blu (Default)</string>
+    <string name="color_black">Nero</string>
+    <string name="color_white">Bianco</string>
+    <string name="color_transparent">Trasparente</string>
+</resources>

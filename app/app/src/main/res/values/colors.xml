@@ -1,0 +1,8 @@
+<resources>
+    <color name="primary">#1565C0</color>
+    <color name="primary_dark">#003c8f</color>
+    <color name="secondary">#42A5F5</color>
+    <color name="white">#FFFFFF</color>
+    <color name="error">#D32F2F</color>
+    <color name="success">#388E3C</color>
+</resources>

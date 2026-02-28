@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.addTextChangedListener
 import com.bishop87.gpstracker.R
 import com.bishop87.gpstracker.databinding.ActivitySettingsBinding
 import com.bishop87.gpstracker.viewmodel.SettingsViewModel
@@ -29,12 +30,12 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun setupObservers() {
         viewModel.settings.observe(this) { settings ->
-            binding.etDeviceName.setText(settings.deviceName)
-            binding.etApiUrl.setText(settings.apiUrl)
-            binding.etUsername.setText(settings.username)
-            binding.etPassword.setText(settings.password)
-            binding.etInterval.setText(settings.trackingIntervalSec.toString())
-            binding.etMapApiUrl.setText(settings.mapApiUrl)
+            if (binding.etDeviceName.text.toString() != settings.deviceName) binding.etDeviceName.setText(settings.deviceName)
+            if (binding.etApiUrl.text.toString() != settings.apiUrl) binding.etApiUrl.setText(settings.apiUrl)
+            if (binding.etUsername.text.toString() != settings.username) binding.etUsername.setText(settings.username)
+            if (binding.etPassword.text.toString() != settings.password) binding.etPassword.setText(settings.password)
+            if (binding.etInterval.text.toString() != settings.trackingIntervalSec.toString()) binding.etInterval.setText(settings.trackingIntervalSec.toString())
+            if (binding.etMapApiUrl.text.toString() != settings.mapApiUrl) binding.etMapApiUrl.setText(settings.mapApiUrl)
 
             currentColor = settings.widgetBackgroundColor
             binding.viewColorPreview.backgroundTintList = android.content.res.ColorStateList.valueOf(currentColor)
@@ -45,8 +46,8 @@ class SettingsActivity : AppCompatActivity() {
 
         viewModel.saved.observe(this) { saved ->
             if (saved == true) {
-                Toast.makeText(this, "Impostazioni salvate", Toast.LENGTH_SHORT).show()
-                finish()
+                // Toast rimosso per evitare spam a ogni tasto premuto: Toast.makeText(this, "Impostazioni salvate", Toast.LENGTH_SHORT).show()
+                // Nessun finish() per l'auto-save
             }
         }
 
@@ -66,21 +67,43 @@ class SettingsActivity : AppCompatActivity() {
             showOverlayColorPickerDialog()
         }
 
-        binding.btnSave.setOnClickListener {
-            val intervalText = binding.etInterval.text.toString()
-            val intervalSec = intervalText.toIntOrNull() ?: 300
-
-            viewModel.saveSettings(
-                deviceName = binding.etDeviceName.text.toString().trim(),
-                apiUrl = binding.etApiUrl.text.toString().trim(),
-                username = binding.etUsername.text.toString().trim(),
-                password = binding.etPassword.text.toString(),
-                trackingIntervalSec = intervalSec,
-                widgetBackgroundColor = currentColor,
-                overlayBackgroundColor = currentOverlayColor,
-                mapApiUrl = binding.etMapApiUrl.text.toString().trim()
-            )
+        binding.btnBack.setOnClickListener {
+            finish()
         }
+
+        // Listener per auto-salvataggio ad ogni modifica del testo
+        binding.etDeviceName.addTextChangedListener { autoSave() }
+        binding.etApiUrl.addTextChangedListener { autoSave() }
+        binding.etMapApiUrl.addTextChangedListener { autoSave() }
+        binding.etUsername.addTextChangedListener { autoSave() }
+        binding.etPassword.addTextChangedListener { autoSave() }
+        binding.etInterval.addTextChangedListener { autoSave() }
+    }
+
+    private var isUpdatingUI = true // Serve per ignorare il primo trigger durante l'observe dei livedata
+
+    private fun autoSave() {
+        if (isUpdatingUI) return
+
+        val intervalText = binding.etInterval.text.toString()
+        val intervalSec = intervalText.toIntOrNull() ?: 300
+
+        viewModel.saveSettings(
+            deviceName = binding.etDeviceName.text.toString().trim(),
+            apiUrl = binding.etApiUrl.text.toString().trim(),
+            username = binding.etUsername.text.toString().trim(),
+            password = binding.etPassword.text.toString(),
+            trackingIntervalSec = intervalSec,
+            widgetBackgroundColor = currentColor,
+            overlayBackgroundColor = currentOverlayColor,
+            mapApiUrl = binding.etMapApiUrl.text.toString().trim()
+        )
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Dopo un primo delay/observe, abilitiamo l'autosave in modo che i setValue iniziali non lo scatenino
+        binding.root.post { isUpdatingUI = false }
     }
 
     private fun showColorPickerDialog() {
@@ -91,6 +114,7 @@ class SettingsActivity : AppCompatActivity() {
                 com.skydoves.colorpickerview.listeners.ColorEnvelopeListener { envelope, _ ->
                     currentColor = envelope.color
                     binding.viewColorPreview.backgroundTintList = android.content.res.ColorStateList.valueOf(currentColor)
+                    autoSave()
                 })
             .setNegativeButton("Annulla") { dialogInterface, _ ->
                 dialogInterface.dismiss()
@@ -109,6 +133,7 @@ class SettingsActivity : AppCompatActivity() {
                 com.skydoves.colorpickerview.listeners.ColorEnvelopeListener { envelope, _ ->
                     currentOverlayColor = envelope.color
                     binding.viewOverlayColorPreview.backgroundTintList = android.content.res.ColorStateList.valueOf(currentOverlayColor)
+                    autoSave()
                 })
             .setNegativeButton("Annulla") { dialogInterface, _ ->
                 dialogInterface.dismiss()

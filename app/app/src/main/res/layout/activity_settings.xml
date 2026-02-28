@@ -155,11 +155,11 @@
                 android:text="Cambia" />
         </LinearLayout>
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSave"
+            android:id="@+id/btnBack"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:text="@string/btn_save" />
+            android:text="Indietro" />
 
     </LinearLayout>
 </ScrollView>

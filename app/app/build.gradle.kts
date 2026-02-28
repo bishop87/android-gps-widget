@@ -11,7 +11,6 @@ val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
-val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY") ?: "YOUR_MAPS_API_KEY"
 
 android {
     namespace = "com.bishop87.gpstracker"
@@ -21,12 +20,10 @@ android {
         applicationId = "com.bishop87.gpstracker"
         minSdk = 27
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        
-        manifestPlaceholders["mapsApiKey"] = mapsApiKey
     }
 
     buildTypes {
@@ -64,7 +61,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.activity)
     implementation(libs.play.services.location)
-    implementation(libs.play.services.maps)
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp)

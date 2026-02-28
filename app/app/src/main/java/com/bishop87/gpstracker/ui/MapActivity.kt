@@ -5,7 +5,9 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.Paint
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,26 +18,31 @@ import com.bishop87.gpstracker.R
 import com.bishop87.gpstracker.data.api.MapDataPoint
 import com.bishop87.gpstracker.databinding.ActivityMapBinding
 import com.bishop87.gpstracker.viewmodel.MapViewModel
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.CircleOptions
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.PolylineOptions
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polygon
+import org.osmdroid.views.overlay.Polyline
+import org.osmdroid.views.overlay.infowindow.BasicInfoWindow
+import org.osmdroid.views.overlay.infowindow.InfoWindow
+import org.osmdroid.events.MapEventsReceiver
+import org.osmdroid.views.overlay.MapEventsOverlay
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-class MapActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMapBinding
     private val viewModel: MapViewModel by viewModels()
-    private var googleMap: GoogleMap? = null
+    private lateinit var map: MapView
+    private var myLocationOverlay: MyLocationNewOverlay? = null
 
     // Formato data selezionata (YYYY-MM-DD HH:mm — vincolo backend)
     private var selectedDateFrom: String? = null
@@ -58,6 +65,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // IMPORTANTE: config osmdroid prima del setContentView
+        Configuration.getInstance().load(applicationContext, PreferenceManager.getDefaultSharedPreferences(applicationContext))
+
         binding = ActivityMapBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -65,30 +76,34 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         supportActionBar?.title = "Mappa GPS"
         
         setupDefaultDates()
-
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.mapFragment) as SupportMapFragment
-        mapFragment.getMapAsync(this)
-
+        setupMap()
         setupObservers()
         setupClickListeners()
+
+        // Esegue il caricamento automatico con i filtri di default all'apertura
+        viewModel.fetchMapData(selectedDateFrom, selectedDateTo)
     }
 
-    override fun onMapReady(map: GoogleMap) {
-        googleMap = map
-
-        // Il layer mappa di default è Normal; l'utente può cambiarlo
-        map.mapType = GoogleMap.MAP_TYPE_NORMAL
-
-        // Abilita pulsante cambio layer (satellite/terrain/hybrid/normal)
-        map.uiSettings.isMapToolbarEnabled = true
-        map.uiSettings.isZoomControlsEnabled = true
+    private fun setupMap() {
+        map = binding.mapView
+        map.setTileSource(TileSourceFactory.MAPNIK)
+        map.setMultiTouchControls(true)
+        
+        // Imposta controller zoom
+        map.controller.setZoom(15.0)
 
         // Richiede il permesso per mostrare la posizione corrente
         requestMyLocationPermission()
-        
-        // Esegue il caricamento automatico con i filtri di default all'apertura
-        viewModel.fetchMapData(selectedDateFrom, selectedDateTo)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        map.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        map.onPause()
     }
 
     private fun setupObservers() {
@@ -175,65 +190,88 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     /**
-     * Disegna i punti GPS sulla mappa: marker rotondi, polyline e marker evidenziato per l'ultimo.
-     * I punti sono già ordinati in ASC per timestamp dal ViewModel.
+     * Disegna i punti GPS sulla mappa: cerchi visivi e marker overlay trasparenti per gli hint.
      */
     private fun drawPointsOnMap(points: List<MapDataPoint>) {
-        val map = googleMap ?: return
-        map.clear()
+        map.overlays.clear()
+        
+        // Ricevitore per i tocchi sulla mappa vuota (chiude i popup)
+        val mapEventsReceiver = object : MapEventsReceiver {
+            override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
+                InfoWindow.closeAllInfoWindowsOn(map)
+                return false
+            }
 
-        if (points.isEmpty()) return
+            override fun longPressHelper(p: GeoPoint?): Boolean {
+                return false
+            }
+        }
+        map.overlays.add(MapEventsOverlay(mapEventsReceiver))
+        
+        // Rimesse l'overlay della posizione se era abilitata
+        myLocationOverlay?.let { map.overlays.add(it) }
 
-        val latLngs = mutableListOf<LatLng>()
+        if (points.isEmpty()) {
+            map.invalidate()
+            return
+        }
+
+        val geoPoints = mutableListOf<GeoPoint>()
 
         for ((index, point) in points.withIndex()) {
             val lat = point.latitude?.toDoubleOrNull() ?: continue
             val lng = point.longitude?.toDoubleOrNull() ?: continue
-            val pos = LatLng(lat, lng)
-            latLngs.add(pos)
+            val pos = GeoPoint(lat, lng)
+            geoPoints.add(pos)
 
             val isLast = (index == points.size - 1)
 
-            // Cerchio piccolo per ogni punto — maggiore raggio per l'ultimo
-            map.addCircle(
-                CircleOptions()
-                    .center(pos)
-                    .radius(if (isLast) 12.0 else 6.0)
-                    .strokeColor(if (isLast) Color.RED else Color.BLUE)
-                    .fillColor(if (isLast) Color.RED else Color.parseColor("#804488FF"))
-                    .strokeWidth(2f)
-            )
-
-            // Marker cliccabile con InfoWindow per i dettagli
+            // 1. Cerchio visivo (Polygon circolare)
+            val circle = Polygon(map).apply {
+                setPoints(Polygon.pointsAsCircle(pos, if (isLast) 12.0 else 6.0))
+                fillPaint.color = if (isLast) Color.RED else Color.parseColor("#804488FF")
+                outlinePaint.color = if (isLast) Color.RED else Color.BLUE
+                outlinePaint.strokeWidth = 2f
+            }
+            
+            // 2. InfoWindow sul Poligono invece del Toast
             val snippetLines = buildString {
                 append("Lat: ${point.latitude}, Lng: ${point.longitude}")
                 if (!point.accuracy.isNullOrBlank()) append("\nAccuracy: ${point.accuracy} m")
                 if (!point.battery.isNullOrBlank()) append("\nBatteria: ${point.battery}%")
                 if (!point.device.isNullOrBlank()) append("\nDevice: ${point.device}")
             }
+            
+            circle.title = point.timestamp ?: ""
+            circle.snippet = snippetLines
+            circle.infoWindow = BasicInfoWindow(org.osmdroid.library.R.layout.bonuspack_bubble, map)
+            
+            circle.setOnClickListener { polygon, mapView, eventPos ->
+                polygon.showInfoWindow()
+                true // Evento consumato
+            }
 
-            map.addMarker(
-                MarkerOptions()
-                    .position(pos)
-                    .title(point.timestamp ?: "")
-                    .snippet(snippetLines)
-                    .alpha(0f) // Marker trasparente: funge solo da hitbox invisibile per l'InfoWindow
-            )
+            map.overlays.add(circle)
         }
 
-        // Disegna la polyline che unisce tutti i punti in ordine ASC (da meno recente a più recente)
-        if (latLngs.size >= 2) {
-            map.addPolyline(
-                PolylineOptions()
-                    .addAll(latLngs)
-                    .color(Color.BLUE)
-                    .width(4f)
-                    .geodesic(true)
-            )
+        // 3. Polyline per i tracciati
+        if (geoPoints.size >= 2) {
+            val line = Polyline(map).apply {
+                setPoints(geoPoints)
+                outlinePaint.color = Color.BLUE
+                outlinePaint.strokeWidth = 4f
+                setOnClickListener { _, _, _ -> 
+                    // Non mostrare il popup vuoto se si clicca la linea
+                    true 
+                }
+            }
+            map.overlays.add(line)
         }
 
-        // Centra la camera sull'ultimo punto
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLngs.last(), 14f))
+        map.invalidate()
+
+        // Centra la telecamera sull'ultimo punto animata
+        map.controller.animateTo(geoPoints.last())
     }
 
     private fun requestMyLocationPermission() {
@@ -246,7 +284,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     @Suppress("MissingPermission")
     private fun enableMyLocation() {
-        googleMap?.isMyLocationEnabled = true
+        if (myLocationOverlay == null) {
+            myLocationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(this), map).apply {
+                enableMyLocation()
+            }
+            map.overlays.add(myLocationOverlay)
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -272,7 +315,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                         val bat = point.battery ?: ""
                         val dev = point.device ?: ""
                         
-                        // Escape quotes se necessario nella vera app, ma qui i dati sono sicuri
                         writer.write("$ts,$lat,$lng,$acc,$bat,$dev\n")
                     }
                 }

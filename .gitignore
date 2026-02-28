@@ -16,6 +16,7 @@ local.properties
 captures/
 .navigation/
 .vscode/
+*.hprof
 
 # Gradle
 .gradle/

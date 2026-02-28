@@ -27,3 +27,4 @@ keystore.jks
 *.keystore
 *.jks
 google-services.json
+config.php

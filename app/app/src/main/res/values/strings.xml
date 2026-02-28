@@ -8,6 +8,7 @@
     <string name="hint_username">Username</string>
     <string name="hint_password">Password</string>
     <string name="hint_tracking_interval">Intervallo tracking (secondi)</string>
+    <string name="hint_map_api_url">URL API Mappa (https://…/map_data2.php)</string>
 
     <!-- Buttons -->
     <string name="btn_test_api">Test chiamata API</string>

@@ -1,20 +1,32 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 }
 
+// Caricamento chiavi raw (es. da local.properties) non versionate
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY") ?: "YOUR_MAPS_API_KEY"
+
 android {
-    namespace = "com.example.gpstracker"
+    namespace = "com.bishop87.gpstracker"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.gpstracker"
+        applicationId = "com.bishop87.gpstracker"
         minSdk = 27
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        manifestPlaceholders["mapsApiKey"] = mapsApiKey
     }
 
     buildTypes {
@@ -52,6 +64,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.activity)
     implementation(libs.play.services.location)
+    implementation(libs.play.services.maps)
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp)

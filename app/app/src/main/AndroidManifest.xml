@@ -58,6 +58,17 @@
             android:windowSoftInputMode="stateHidden"
             android:label="@string/title_settings" />
 
+        <!-- Map screen -->
+        <activity
+            android:name=".ui.MapActivity"
+            android:exported="false"
+            android:label="Mappa GPS" />
+
+        <!-- Google Maps API Key injected from local.properties via build.gradle.kts -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${mapsApiKey}" />
+
         <!-- Foreground Tracking Service -->
         <service
             android:name=".service.TrackingForegroundService"

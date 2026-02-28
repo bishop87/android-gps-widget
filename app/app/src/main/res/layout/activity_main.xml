@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center_horizontal"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="24dp">
 
     <TextView
         android:id="@+id/tvTitle"
@@ -15,29 +20,23 @@
         android:textSize="28sp"
         android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/tvStatus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="@string/status_idle"
-        android:textSize="16sp" />
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:visibility="gone" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnTestApi"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="@string/btn_test_api"
-        android:paddingStart="32dp"
-        android:paddingEnd="32dp" />
+        app:icon="@drawable/ic_send"
+        android:text="@string/btn_test_api" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMap"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        app:icon="@drawable/ic_map"
+        android:text="Mappa" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -81,10 +80,10 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSettings"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
+        app:icon="@drawable/ic_settings"
         android:text="@string/btn_settings" />
 
     <View
@@ -100,4 +99,14 @@
         android:textSize="12sp"
         android:alpha="0.5" />
 
-</LinearLayout>
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:elevation="8dp" />
+
+</FrameLayout>

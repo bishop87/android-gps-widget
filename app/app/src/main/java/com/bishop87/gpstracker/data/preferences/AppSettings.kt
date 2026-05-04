@@ -14,6 +14,8 @@ object SettingsKeys {
     const val OVERLAY_ENABLED = "overlay_enabled"
     const val OVERLAY_BACKGROUND_COLOR = "overlay_background_color"
     const val MAP_API_URL = "map_api_url"
+    const val OVERLAY_BORDER_COLOR = "overlay_border_color"
+    const val OVERLAY_BORDER_WIDTH = "overlay_border_width"
 }
 
 /**
@@ -29,5 +31,7 @@ data class AppSettings(
     val widgetBackgroundColor: Int = 0xCC1565C0.toInt(), // default Blue semi-trasparente
     val overlayEnabled: Boolean = false,
     val overlayBackgroundColor: Int = 0xCC1565C0.toInt(), // default Blue semi-trasparente
+    val overlayBorderColor: Int = android.graphics.Color.TRANSPARENT,
+    val overlayBorderWidth: Int = 0,
     val mapApiUrl: String = "" // Endpoint for Map API
 )

@@ -5,13 +5,15 @@
     android:layout_height="wrap_content"
     android:padding="8dp">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnOverlaySend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_menu_mylocation"
-        app:fabSize="normal"
-        app:tint="@android:color/white"
+        style="@style/Widget.Material3.Button.IconButton.Filled"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        app:icon="@android:drawable/ic_menu_mylocation"
+        app:iconTint="@android:color/white"
+        app:iconSize="24dp"
+        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Material3.FloatingActionButton"
         android:contentDescription="Invia Posizione" />
 
     <ProgressBar

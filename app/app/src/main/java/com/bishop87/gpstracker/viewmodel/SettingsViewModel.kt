@@ -36,6 +36,8 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
         trackingIntervalSec: Int,
         widgetBackgroundColor: Int,
         overlayBackgroundColor: Int,
+        overlayBorderColor: Int,
+        overlayBorderWidth: Int,
         mapApiUrl: String
     ) {
         if (apiUrl.isNotBlank() && !apiUrl.startsWith("https://")) {
@@ -46,8 +48,8 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
             _validationError.value = "L'URL API Mappa non è valido"
             return
         }
-        if (trackingIntervalSec < 10) {
-            _validationError.value = "Intervallo minimo: 10 secondi"
+        if (trackingIntervalSec < 5) {
+            _validationError.value = "Intervallo minimo: 5 secondi"
             return
         }
 
@@ -64,10 +66,31 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
             widgetBackgroundColor = widgetBackgroundColor,
             overlayEnabled = currentOverlay,
             overlayBackgroundColor = overlayBackgroundColor,
+            overlayBorderColor = overlayBorderColor,
+            overlayBorderWidth = overlayBorderWidth,
             mapApiUrl = mapApiUrl
         )
         settingsRepository.saveSettings(newSettings)
         _settings.value = newSettings
         _saved.value = true
+    }
+
+    fun getSettingsAsJson(): String {
+        return com.google.gson.Gson().toJson(_settings.value)
+    }
+
+    fun applySettingsFromJson(json: String): Boolean {
+        try {
+            val newSettings = com.google.gson.Gson().fromJson(json, AppSettings::class.java)
+            if (newSettings != null) {
+                settingsRepository.saveSettings(newSettings)
+                _settings.value = newSettings
+                _saved.value = true
+                return true
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return false
     }
 }

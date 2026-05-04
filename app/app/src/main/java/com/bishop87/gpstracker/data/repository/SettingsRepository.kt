@@ -38,6 +38,8 @@ class SettingsRepository(val context: Context) {
             widgetBackgroundColor = prefs.getInt(SettingsKeys.WIDGET_BACKGROUND_COLOR, 0xCC1565C0.toInt()),
             overlayEnabled = prefs.getBoolean(SettingsKeys.OVERLAY_ENABLED, false),
             overlayBackgroundColor = prefs.getInt(SettingsKeys.OVERLAY_BACKGROUND_COLOR, 0xCC1565C0.toInt()),
+            overlayBorderColor = prefs.getInt(SettingsKeys.OVERLAY_BORDER_COLOR, android.graphics.Color.TRANSPARENT),
+            overlayBorderWidth = prefs.getInt(SettingsKeys.OVERLAY_BORDER_WIDTH, 0),
             mapApiUrl = prefs.getString(SettingsKeys.MAP_API_URL, "") ?: ""
         )
     }
@@ -53,6 +55,8 @@ class SettingsRepository(val context: Context) {
             putInt(SettingsKeys.WIDGET_BACKGROUND_COLOR, settings.widgetBackgroundColor)
             putBoolean(SettingsKeys.OVERLAY_ENABLED, settings.overlayEnabled)
             putInt(SettingsKeys.OVERLAY_BACKGROUND_COLOR, settings.overlayBackgroundColor)
+            putInt(SettingsKeys.OVERLAY_BORDER_COLOR, settings.overlayBorderColor)
+            putInt(SettingsKeys.OVERLAY_BORDER_WIDTH, settings.overlayBorderWidth)
             putString(SettingsKeys.MAP_API_URL, settings.mapApiUrl)
             apply()
         }

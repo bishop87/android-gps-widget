@@ -3,6 +3,7 @@ package com.bishop87.gpstracker.service
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.Build
@@ -19,7 +20,7 @@ import com.bishop87.gpstracker.data.repository.LocationRepository
 import com.bishop87.gpstracker.data.repository.SettingsRepository
 import com.bishop87.gpstracker.domain.usecase.GetCurrentLocationUseCase
 import com.bishop87.gpstracker.domain.usecase.SendLocationUseCase
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,8 +37,9 @@ class OverlayService : Service() {
     private lateinit var overlayView: View
     private lateinit var params: WindowManager.LayoutParams
     
-    private lateinit var btnSend: FloatingActionButton
+    private lateinit var btnSend: MaterialButton
     private lateinit var progressBar: ProgressBar
+    private var defaultBackgroundTint: ColorStateList? = null
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var getLocation: GetCurrentLocationUseCase
@@ -60,9 +62,15 @@ class OverlayService : Service() {
         btnSend = overlayView.findViewById(R.id.btnOverlaySend)
         progressBar = overlayView.findViewById(R.id.progressOverlay)
 
-        // Carica e applica il colore personalizzato
-        val overlayColor = settingsRepo.getOverlayBackgroundColor()
-        btnSend.backgroundTintList = android.content.res.ColorStateList.valueOf(overlayColor)
+        // Carica e applica le impostazioni grafiche
+        val appSettings = settingsRepo.loadSettings()
+        defaultBackgroundTint = ColorStateList.valueOf(appSettings.overlayBackgroundColor)
+        btnSend.backgroundTintList = defaultBackgroundTint
+        btnSend.strokeColor = ColorStateList.valueOf(appSettings.overlayBorderColor)
+        
+        // Converti dp in px per lo spessore del bordo
+        val density = resources.displayMetrics.density
+        btnSend.strokeWidth = (appSettings.overlayBorderWidth * density).toInt()
 
         val layoutFlag: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -161,18 +169,18 @@ class OverlayService : Service() {
             progressBar.visibility = if (isWorking) View.VISIBLE else View.GONE
             
             if (isWorking) {
-                btnSend.setColorFilter(Color.GRAY)
+                btnSend.backgroundTintList = ColorStateList.valueOf(Color.GRAY)
             } else {
                 when (success) {
-                    true -> btnSend.setColorFilter(Color.GREEN)
-                    false -> btnSend.setColorFilter(Color.RED)
-                    null -> btnSend.clearColorFilter()
+                    true -> btnSend.backgroundTintList = ColorStateList.valueOf(Color.GREEN)
+                    false -> btnSend.backgroundTintList = ColorStateList.valueOf(Color.RED)
+                    null -> btnSend.backgroundTintList = defaultBackgroundTint
                 }
                 
                 // Torna al colore normale dopo 3 secondi se c'è stato un esito
                 if (success != null) {
                     overlayView.postDelayed({
-                        btnSend.clearColorFilter()
+                        btnSend.backgroundTintList = defaultBackgroundTint
                     }, 3000)
                 }
             }
